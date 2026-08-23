@@ -100,10 +100,18 @@ echo ""
 # ==============================================================================
 # 检查环境
 # ==============================================================================
+# M 系列 /opt/homebrew 默认不在 PATH 里；Intel 一般是 /usr/local
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
 if ! command -v brew &> /dev/null; then
   echo "错误: 未检测到 Homebrew，请先安装: https://brew.sh"
   exit 1
 fi
+echo "    Homebrew: $(brew --prefix) ($(uname -m))"
 
 if ! command -v git &> /dev/null; then
   echo "错误: 未检测到 git，请先安装 Xcode Command Line Tools: xcode-select --install"
@@ -191,41 +199,40 @@ echo "    ✓ ~/.config/ghostty/config  ($THEME_LABEL)"
 echo "    ✓ ~/.config/ghostty/theme.zsh"
 echo "    ✓ ~/.config/starship.toml"
 
-ensure_theme_source() {
-  if grep -q 'ghostty/theme.zsh' ~/.zshrc 2>/dev/null; then
-    return 0
-  fi
-  if grep -q "# <<< ghostty-terminal-config <<<" ~/.zshrc 2>/dev/null; then
-    local tmp
-    tmp="$(mktemp)"
-    awk '
-      /# <<< ghostty-terminal-config <<</ && !done {
-        print "[ -f \"$HOME/.config/ghostty/theme.zsh\" ] && source \"$HOME/.config/ghostty/theme.zsh\""
-        done=1
-      }
-      { print }
-    ' ~/.zshrc > "$tmp"
-    mv "$tmp" ~/.zshrc
-  else
-    echo '[ -f "$HOME/.config/ghostty/theme.zsh" ] && source "$HOME/.config/ghostty/theme.zsh"' >> ~/.zshrc
-  fi
-}
+# .zshrc：有标记块则整段替换（方便 M 系列 / Intel 同步更新），否则追加
+zsh_snippet="$(mktemp)"
+{
+  echo "# >>> ghostty-terminal-config >>>"
+  echo "# 以下内容由 ghostty-terminal-config 安装脚本自动追加"
+  echo "# 删除方法: 移除从 >>> 到 <<< 之间的所有内容"
+  cat "$TMP_DIR/repo/zsh/.zshrc"
+  echo "# <<< ghostty-terminal-config <<<"
+} > "$zsh_snippet"
 
-# .zshrc 追加到用户已有配置尾部（不覆盖）
+touch ~/.zshrc
 if grep -q "# >>> ghostty-terminal-config >>>" ~/.zshrc 2>/dev/null; then
-  ensure_theme_source
-  echo "    .zshrc 中已存在 ghostty-terminal-config 配置，已同步主题附加项。"
+  zsh_tmp="$(mktemp)"
+  awk -v snippet="$zsh_snippet" '
+    /# >>> ghostty-terminal-config >>>/ {
+      while ((getline line < snippet) > 0) print line
+      close(snippet)
+      skip=1
+      next
+    }
+    skip && /# <<< ghostty-terminal-config <<</ { skip=0; next }
+    skip { next }
+    { print }
+  ' ~/.zshrc > "$zsh_tmp"
+  mv "$zsh_tmp" ~/.zshrc
+  echo "    ✓ ~/.zshrc (已更新配置块，兼容 Apple Silicon / Intel)"
 else
   {
     echo ""
-    echo "# >>> ghostty-terminal-config >>>"
-    echo "# 以下内容由 ghostty-terminal-config 安装脚本自动追加"
-    echo "# 删除方法: 移除从 >>> 到 <<< 之间的所有内容"
-    cat "$TMP_DIR/repo/zsh/.zshrc"
-    echo "# <<< ghostty-terminal-config <<<"
+    cat "$zsh_snippet"
   } >> ~/.zshrc
   echo "    ✓ ~/.zshrc (已追加到尾部)"
 fi
+rm -f "$zsh_snippet"
 
 # ==============================================================================
 # 完成

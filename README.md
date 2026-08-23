@@ -1,6 +1,6 @@
 # Ghostty Terminal Config
 
-macOS 下基于 Ghostty + Starship + zsh 插件的终端美化方案，从 iTerm2 + oh-my-zsh 迁移而来，更轻量更快。
+macOS 下基于 Ghostty + Starship + zsh 插件的终端美化方案，从 iTerm2 + oh-my-zsh 迁移而来，更轻量更快。Apple Silicon（M 系列，Homebrew 在 `/opt/homebrew`）与 Intel（`/usr/local`）共用同一套配置，启动时按本机 brew 位置解析。
 
 ## 效果
 

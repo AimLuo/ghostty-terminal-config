@@ -1,15 +1,14 @@
 # ==============================================================================
-# Homebrew 前缀
+# Homebrew（Apple Silicon / Intel）
 # ==============================================================================
-# Apple Silicon: /opt/homebrew | Intel: /usr/local
-# 按本机 brew 位置解析，不写死路径，也不每次调用 brew --prefix
+# M2/M3: /opt/homebrew | Intel: /usr/local
+# 优先 ARM brew，避免 M 系列上同时装了 Rosetta brew 时走错前缀
+# shellenv 会设置 HOMEBREW_PREFIX，并把 brew 的 bin 加入 PATH（M 系列默认 PATH 不含 /opt/homebrew/bin）
 if [[ -z "${HOMEBREW_PREFIX:-}" ]]; then
   if [[ -x /opt/homebrew/bin/brew ]]; then
-    HOMEBREW_PREFIX=/opt/homebrew
+    eval "$(/opt/homebrew/bin/brew shellenv)"
   elif [[ -x /usr/local/bin/brew ]]; then
-    HOMEBREW_PREFIX=/usr/local
-  else
-    HOMEBREW_PREFIX=/opt/homebrew
+    eval "$(/usr/local/bin/brew shellenv)"
   fi
 fi
 
@@ -111,7 +110,10 @@ function y() {
 # 快捷键
 # ==============================================================================
 # Ctrl+F 接受 autosuggestions 的建议（默认是 → 键，Ctrl+F 更顺手）
-bindkey '^F' autosuggest-accept
+# 插件未加载时不 bind，避免 Intel/M 系列路径不一致时启动报错
+if (( ${+widgets[autosuggest-accept]} )); then
+  bindkey '^F' autosuggest-accept
+fi
 
 # ==============================================================================
 # 主题附加项
