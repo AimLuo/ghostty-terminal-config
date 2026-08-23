@@ -1,4 +1,19 @@
 # ==============================================================================
+# Homebrew 前缀
+# ==============================================================================
+# Apple Silicon: /opt/homebrew | Intel: /usr/local
+# 按本机 brew 位置解析，不写死路径，也不每次调用 brew --prefix
+if [[ -z "${HOMEBREW_PREFIX:-}" ]]; then
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    HOMEBREW_PREFIX=/opt/homebrew
+  elif [[ -x /usr/local/bin/brew ]]; then
+    HOMEBREW_PREFIX=/usr/local
+  else
+    HOMEBREW_PREFIX=/opt/homebrew
+  fi
+fi
+
+# ==============================================================================
 # 历史记录
 # ==============================================================================
 # zsh 历史命令配置，autosuggestions 和 fzf 都依赖历史记录
@@ -21,7 +36,7 @@ setopt hist_ignore_space
 # 扩展 zsh 的 Tab 补全候选列表，支持更多命令的参数补全
 # 使用方法: 输入命令后按 Tab 键
 # 注意: fpath 必须在 compinit 之前，否则补全定义不会被扫描到
-fpath=(/opt/homebrew/share/zsh-completions $fpath)
+fpath=("$HOMEBREW_PREFIX/share/zsh-completions" $fpath)
 autoload -Uz compinit && compinit -u
 # Tab 补全时显示候选菜单，连续按 Tab 可用光标在列表中移动选择
 zstyle ':completion:*' menu select
@@ -81,14 +96,16 @@ function y() {
 # 根据历史命令在光标后显示灰色建议
 # 使用方法: 输入时自动出现灰色提示，按 → 或 Ctrl+F 接受
 # 注意: 依赖历史记录，上面的 HISTFILE 配置不能少
-source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+[[ -f "$HOMEBREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] && \
+  source "$HOMEBREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
 # ==============================================================================
 # zsh-syntax-highlighting | 语法高亮
 # ==============================================================================
 # 命令输入时实时着色：存在的命令绿色，不存在的红色，字符串高亮等
 # 注意: 官方要求必须是最后一个被 source 的插件，否则无法正确高亮其他插件的命令
-source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+[[ -f "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] && \
+  source "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
 # ==============================================================================
 # 快捷键
