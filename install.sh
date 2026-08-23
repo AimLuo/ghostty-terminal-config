@@ -4,7 +4,7 @@
 # ghostty-terminal-config 一键安装脚本
 # ==============================================================================
 # 用法:
-#   bash <(curl -fsSL https://raw.githubusercontent.com/justhalfbit/ghostty-terminal-config/main/install.sh)
+#   bash <(curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main/install.sh)
 #
 # 说明:
 #   1. 选择深色（Catppuccin Mocha）或浅色（Catppuccin Latte）
@@ -27,7 +27,7 @@
 
 set -e
 
-REPO_URL="https://github.com/justhalfbit/ghostty-terminal-config.git"
+REPO_URL="https://github.com/AimLuo/ghostty-terminal-config.git"
 BACKUP_DIR="$HOME/.config-backup/$(date +%Y%m%d_%H%M%S)"
 TMP_DIR="$(mktemp -d)"
 

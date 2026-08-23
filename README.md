@@ -21,7 +21,7 @@ macOS 下基于 Ghostty + Starship + zsh 插件的终端美化方案，从 iTerm
 ## 一键安装
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/justhalfbit/ghostty-terminal-config/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main/install.sh)
 ```
 
 安装前会询问确认，并选择深色或浅色：
@@ -33,8 +33,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/justhalfbit/ghostty-terminal
 非交互安装可指定主题：
 
 ```bash
-THEME=light bash <(curl -fsSL https://raw.githubusercontent.com/justhalfbit/ghostty-terminal-config/main/install.sh)
-THEME=dark  bash <(curl -fsSL https://raw.githubusercontent.com/justhalfbit/ghostty-terminal-config/main/install.sh)
+THEME=light bash <(curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main/install.sh)
+THEME=dark  bash <(curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main/install.sh)
 ```
 
 ## 备份与恢复
@@ -94,7 +94,7 @@ brew install starship fzf zoxide eza bat yazi zsh-autosuggestions zsh-syntax-hig
 ### 2. 下载配置文件
 
 ```bash
-git clone --depth 1 https://github.com/justhalfbit/ghostty-terminal-config.git /tmp/ghostty-config
+git clone --depth 1 https://github.com/AimLuo/ghostty-terminal-config.git /tmp/ghostty-config
 ```
 
 ### 3. 安装配置文件
