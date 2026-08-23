@@ -77,7 +77,7 @@ if [[ -n "$THEME_VARIANT" ]]; then
 else
   echo "请选择终端主题:"
   echo "  1) 深色  Catppuccin Mocha（默认，与当前风格一致）"
-  echo "  2) 浅色  Catppuccin Latte（同系列浅色，彩虹条与窗口样式不变）"
+  echo "  2) 浅色  Catppuccin Latte（终端浅底；彩虹条仍用 Mocha 粉彩 + 深色字）"
   echo ""
   read -p "请输入 [1/2] (默认 1): " -n 1 -r < /dev/tty
   echo ""
@@ -170,10 +170,9 @@ mkdir -p ~/.config/ghostty
 cp "$TMP_DIR/repo/ghostty/config" ~/.config/ghostty/config
 cp "$TMP_DIR/repo/starship/starship.toml" ~/.config/starship.toml
 
-# 按选择写入浅色/深色（仓库默认是 Mocha；浅色只改主题名和 Starship 调色板）
+# 按选择写入浅色/深色。彩虹条始终用 Mocha（粉彩底 + 深色字），浅底上也清楚。
 if [[ "$THEME_VARIANT" == "light" ]]; then
   sed -i '' 's/theme = "Catppuccin Mocha"/theme = "Catppuccin Latte"/' ~/.config/ghostty/config
-  sed -i '' "s/palette = 'catppuccin_mocha'/palette = 'catppuccin_latte'/" ~/.config/starship.toml
   cat > ~/.config/ghostty/theme.zsh <<'EOF'
 # 由 ghostty-terminal-config 安装脚本生成（浅色）
 # bat 使用内置浅色主题，避免深色高亮铺在浅色终端上

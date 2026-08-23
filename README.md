@@ -27,7 +27,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-conf
 安装前会询问确认，并选择深色或浅色：
 1. 通过 Homebrew 安装所有依赖
 2. 备份已有 Ghostty 和 Starship 配置文件
-3. 按所选主题安装 Ghostty 和 Starship 配置（覆盖）
+3. 按所选主题安装 Ghostty 配置（覆盖）；Starship 彩虹条始终用 Mocha
 4. 将 zsh 配置追加到 `~/.zshrc` 尾部（不覆盖用户已有内容）
 
 非交互安装可指定主题：
@@ -106,11 +106,10 @@ cp /tmp/ghostty-config/starship/starship.toml ~/.config/starship.toml
 cat /tmp/ghostty-config/zsh/.zshrc >> ~/.zshrc
 ```
 
-默认是深色（Mocha）。若要用浅色（Latte）：
+默认是深色（Mocha）。若要用浅色（Latte），只改 Ghostty，彩虹条不用动：
 
 ```bash
 sed -i '' 's/theme = "Catppuccin Mocha"/theme = "Catppuccin Latte"/' ~/.config/ghostty/config
-sed -i '' "s/palette = 'catppuccin_mocha'/palette = 'catppuccin_latte'/" ~/.config/starship.toml
 cat > ~/.config/ghostty/theme.zsh <<'EOF'
 export BAT_THEME="GitHub"
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#9ca0b0"
@@ -129,14 +128,14 @@ rm -rf /tmp/ghostty-config
 
 ## 主题
 
-深浅两套都是 Catppuccin 同系列，彩虹条分段、字体、窗口内边距和毛玻璃不变。
+深浅两套只换终端底色（Ghostty），彩虹条始终用 Mocha 粉彩 + 深色字，浅底上也清楚。
 
 | 选项 | Ghostty | Starship palette | 额外调整 |
 |------|---------|------------------|----------|
 | 深色（默认） | Catppuccin Mocha | `catppuccin_mocha` | 无 |
-| 浅色 | Catppuccin Latte | `catppuccin_latte` | `bat` 用 GitHub 浅色高亮；自动建议用 Latte overlay 灰，避免看不清 |
+| 浅色 | Catppuccin Latte | `catppuccin_mocha`（不变） | `bat` 用 GitHub 浅色高亮；自动建议用 Latte overlay 灰，避免看不清 |
 
-安装后改主题：重新运行安装脚本并重新选择，或按上面「手动安装」里的 `sed` 改两处后重启 Ghostty。
+安装后改主题：重新运行安装脚本并重新选择，或按上面「手动安装」改 Ghostty 后重启。
 
 ## Starship 预设说明
 

@@ -4,8 +4,7 @@
 # 基于 starship preset catppuccin-powerline 官方预设
 # 改动: 启用换行，彩虹条一行，输入符号在下一行
 # 配色梯度: red → peach → yellow → green → sapphire → lavender
-# 切换调色板: 修改 palette 值为 catppuccin_mocha（深色）或 catppuccin_latte（浅色）
-# 安装脚本会按选择写入；手动切换时请同步改 Ghostty 的 theme
+# 彩虹条固定 catppuccin_mocha：粉彩色块 + crust 深色字，深浅终端都能用
 
 "$schema" = 'https://starship.rs/config-schema.json'
 
