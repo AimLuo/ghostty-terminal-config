@@ -14,6 +14,8 @@ adjust-cell-height = 0
 # 主题
 # ==============================================================================
 # ghostty +list-themes 可预览全部 300+ 内置主题
+# 深色: Catppuccin Mocha（默认）| 浅色: Catppuccin Latte
+# 安装脚本会按选择写入；手动切换后重启 Ghostty，并同步改 starship.toml 的 palette
 theme = "Catppuccin Mocha"
 
 # ==============================================================================

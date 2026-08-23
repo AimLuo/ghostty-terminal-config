@@ -7,6 +7,7 @@ macOS 下基于 Ghostty + Starship + zsh 插件的终端美化方案，从 iTerm
 - 彩虹条提示符（基于 Starship 官方 catppuccin-powerline 预设，启用换行显示）
 - 半透明毛玻璃窗口
 - 语法高亮、自动建议、模糊搜索
+- 同系列深色 / 浅色：Catppuccin Mocha 或 Latte，安装时选择
 
 ## 包含的配置文件
 
@@ -15,6 +16,7 @@ macOS 下基于 Ghostty + Starship + zsh 插件的终端美化方案，从 iTerm
 | `ghostty/config` | Ghostty 终端配置（字体、主题、窗口、光标） | `~/.config/ghostty/config` |
 | `starship/starship.toml` | Starship 彩虹条提示符配置（官方预设 + 换行） | `~/.config/starship.toml` |
 | `zsh/.zshrc` | zsh 配置（插件、工具、别名、快捷键） | `~/.zshrc` |
+| （安装时生成） | 浅色附加项：bat 主题、自动建议对比度 | `~/.config/ghostty/theme.zsh` |
 
 ## 一键安装
 
@@ -22,11 +24,18 @@ macOS 下基于 Ghostty + Starship + zsh 插件的终端美化方案，从 iTerm
 bash <(curl -fsSL https://raw.githubusercontent.com/justhalfbit/ghostty-terminal-config/main/install.sh)
 ```
 
-安装前会询问确认，确认后自动执行：
+安装前会询问确认，并选择深色或浅色：
 1. 通过 Homebrew 安装所有依赖
 2. 备份已有 Ghostty 和 Starship 配置文件
-3. 安装 Ghostty 和 Starship 配置（覆盖）
+3. 按所选主题安装 Ghostty 和 Starship 配置（覆盖）
 4. 将 zsh 配置追加到 `~/.zshrc` 尾部（不覆盖用户已有内容）
+
+非交互安装可指定主题：
+
+```bash
+THEME=light bash <(curl -fsSL https://raw.githubusercontent.com/justhalfbit/ghostty-terminal-config/main/install.sh)
+THEME=dark  bash <(curl -fsSL https://raw.githubusercontent.com/justhalfbit/ghostty-terminal-config/main/install.sh)
+```
 
 ## 备份与恢复
 
@@ -37,6 +46,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/justhalfbit/ghostty-terminal
 | 备份文件 | 原始位置 |
 |---------|---------|
 | `~/.config-backup/<时间戳>/ghostty-config` | `~/.config/ghostty/config` |
+| `~/.config-backup/<时间戳>/ghostty-theme.zsh` | `~/.config/ghostty/theme.zsh` |
 | `~/.config-backup/<时间戳>/starship.toml` | `~/.config/starship.toml` |
 
 恢复命令：
@@ -48,6 +58,7 @@ ls ~/.config-backup/
 # 恢复（替换 <时间戳> 为实际目录名）
 cp ~/.config-backup/<时间戳>/ghostty-config ~/.config/ghostty/config
 cp ~/.config-backup/<时间戳>/starship.toml ~/.config/starship.toml
+cp ~/.config-backup/<时间戳>/ghostty-theme.zsh ~/.config/ghostty/theme.zsh
 ```
 
 ### 卸载 zsh 配置
@@ -95,6 +106,17 @@ cp /tmp/ghostty-config/starship/starship.toml ~/.config/starship.toml
 cat /tmp/ghostty-config/zsh/.zshrc >> ~/.zshrc
 ```
 
+默认是深色（Mocha）。若要用浅色（Latte）：
+
+```bash
+sed -i '' 's/theme = "Catppuccin Mocha"/theme = "Catppuccin Latte"/' ~/.config/ghostty/config
+sed -i '' "s/palette = 'catppuccin_mocha'/palette = 'catppuccin_latte'/" ~/.config/starship.toml
+cat > ~/.config/ghostty/theme.zsh <<'EOF'
+export BAT_THEME="GitHub"
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#9ca0b0"
+EOF
+```
+
 > 注意：zsh 配置是追加到 `~/.zshrc` 尾部，不会覆盖已有内容。如果重复执行需手动去重。
 
 ### 4. 清理并重启
@@ -104,6 +126,17 @@ rm -rf /tmp/ghostty-config
 ```
 
 重启 Ghostty 终端生效。
+
+## 主题
+
+深浅两套都是 Catppuccin 同系列，彩虹条分段、字体、窗口内边距和毛玻璃不变。
+
+| 选项 | Ghostty | Starship palette | 额外调整 |
+|------|---------|------------------|----------|
+| 深色（默认） | Catppuccin Mocha | `catppuccin_mocha` | 无 |
+| 浅色 | Catppuccin Latte | `catppuccin_latte` | `bat` 用 GitHub 浅色高亮；自动建议用 Latte overlay 灰，避免看不清 |
+
+安装后改主题：重新运行安装脚本并重新选择，或按上面「手动安装」里的 `sed` 改两处后重启 Ghostty。
 
 ## Starship 预设说明
 
