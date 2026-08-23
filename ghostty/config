@@ -38,7 +38,7 @@ window-save-state = always
 # ==============================================================================
 # cursor-style: bar 细竖线 | block 方块 | underline 下划线
 # cursor-style-blink: 光标是否闪烁
-cursor-style = bar
+cursor-style = block
 cursor-style-blink = true
 
 # ==============================================================================
