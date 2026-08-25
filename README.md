@@ -5,7 +5,6 @@ macOS 下基于 Ghostty + Starship + zsh 插件的终端美化方案，从 iTerm
 ## 效果
 
 - 彩虹条提示符（基于 Starship 官方 catppuccin-powerline 预设，启用换行显示）
-- 半透明毛玻璃窗口
 - 语法高亮、自动建议、模糊搜索
 - 同系列深色 / 浅色：Catppuccin Mocha 或 Latte，安装时选择
 
