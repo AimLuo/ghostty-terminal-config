@@ -1,6 +1,6 @@
 # shell-config
 
-macOS 下的 zsh + Starship 配置。不绑定 Ghostty 或任何终端模拟器。
+zsh + Starship 配置。不绑定 Ghostty 或任何终端模拟器。macOS 与 Debian 是**两套**安装脚本和 zsh 配置，不要混用。
 
 Starship 使用官方 [Plain Text Symbols](https://starship.rs/presets/plain-text) 预设，内容钉在 **Starship 1.26.0**（由该版本的 `starship preset plain-text-symbols` 生成）。提示符是纯文本符号，不需要 Nerd Font。不要从 GitHub `main` 或 starship.rs 当前文档页拷 TOML，那些会带上尚未发版的模块（例如 `jj_bookmark`）。
 
@@ -15,22 +15,38 @@ Starship 使用官方 [Plain Text Symbols](https://starship.rs/presets/plain-tex
 | 文件 | 说明 | 安装位置 |
 |------|------|---------|
 | `starship/starship.toml` | Starship 1.26.0 的官方 plain-text-symbols 预设 | `~/.config/starship.toml` |
-| `zsh/.zshrc` | zsh 配置（插件、工具、别名、快捷键） | `~/.zshrc` |
+| `zsh/.zshrc` | macOS / Homebrew 的 zsh 配置 | `~/.zshrc` |
+| `zsh/debian.zshrc` | Debian 的 zsh 配置 | `~/.zshrc` |
 
 ## 一键安装
+
+### macOS
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main/install.sh)
 ```
 
-安装前会询问确认：
-
 1. 通过 Homebrew 安装 Starship 与 zsh 工具（不装终端模拟器，不装字体）
 2. 备份已有 Starship 配置
 3. 覆盖写入 `~/.config/starship.toml`（明确提示：这是 Starship **1.26.0** 预设）
-4. 将 zsh 配置写入 `~/.zshrc`（已有旧 `ghostty-terminal-config` 段会被替换）
+4. 将 `zsh/.zshrc` 写入 `~/.zshrc`
 
-不会改动 `~/.config/ghostty` 或其他终端配置。
+### Debian 13 (Trixie)
+
+前提：已安装 `git` 和 `zsh`。
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main/install-debian.sh)
+```
+
+1. apt 安装 eza 与 zsh 插件（主仓没有上游 `.deb` 的那些）
+2. 从 GitHub Releases 下载官方 `.deb`：bat、zoxide、fzf、yazi
+3. Starship 没有官方 `.deb`，用官方 `install.sh` 钉在 1.26.0
+4. 写入同一份 1.26 预设，以及 `zsh/debian.zshrc`
+
+不加第三方 apt 源。Starship / eza / zsh 插件为何不走 `.deb`，见 `research/debian-install.md`。
+
+两套脚本都不会改动 `~/.config/ghostty` 或其他终端配置。
 
 ## 备份与恢复
 
@@ -61,7 +77,7 @@ cp ~/.config-backup/<时间戳>/starship.toml ~/.config/starship.toml
 
 不安装终端模拟器，也不安装字体。本仓库控制的提示符和 `ls` 别名都不依赖 Nerd Font。
 
-## 手动安装
+## 手动安装（macOS）
 
 ### 1. 安装依赖
 
