@@ -46,8 +46,8 @@ zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 # ==============================================================================
 # Starship | 终端提示符
 # ==============================================================================
-# 跨 shell 的提示符工具，显示当前目录、git 分支、语言版本等
-# 配置文件: ~/.config/starship.toml（不创建则使用默认样式）
+# 跨 shell、不绑定具体终端模拟器
+# 配置文件: ~/.config/starship.toml（本仓库使用官方 plain-text-symbols 预设）
 # 注意: 放在 compinit 之后，避免补全系统冲突
 eval "$(starship init zsh)"
 
@@ -114,20 +114,13 @@ function y() {
 bindkey '^F' autosuggest-accept
 
 # ==============================================================================
-# 主题附加项
-# ==============================================================================
-# 由安装脚本按深色/浅色选择写入（bat 主题、自动建议对比度）
-# 重新运行安装脚本并改选主题即可更新
-[ -f "$HOME/.config/ghostty/theme.zsh" ] && source "$HOME/.config/ghostty/theme.zsh"
-
-# ==============================================================================
 # 别名
 # ==============================================================================
-# eza | 替代 ls，支持彩色输出、文件图标、目录优先
+# eza | 替代 ls；不用 --icons，避免依赖 Nerd Font
 # 使用方法: ls 普通列表, ll 详细列表, lt 树形视图
-alias ls="eza --icons --group-directories-first"
-alias ll="eza -l --icons --sort=name"
-alias lt="eza --tree --icons --level=2"
+alias ls="eza --group-directories-first"
+alias ll="eza -l --sort=name"
+alias lt="eza --tree --level=2"
 
 # bat | 替代 cat，支持语法高亮
 # 使用方法: cat 文件名（实际调用 bat）

@@ -1,28 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ==============================================================================
-# ghostty-terminal-config 一键安装脚本
+# shell-config 一键安装脚本
 # ==============================================================================
 # 用法:
 #   bash <(curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main/install.sh)
 #
 # 说明:
-#   1. 选择深色（Catppuccin Mocha）或浅色（Catppuccin Latte）
-#   2. 安装 Homebrew 依赖（字体、终端工具、zsh 插件）
-#   3. 备份已有配置到 ~/.config-backup/YYYYMMDD_HHMMSS/
-#   4. 从 GitHub 下载配置文件到目标位置
-#
-# 非交互指定主题:
-#   THEME=light bash install.sh
-#   THEME=dark  bash install.sh
-#
-# 恢复备份:
-#   cp ~/.config-backup/<时间戳>/ghostty-config ~/.config/ghostty/config
-#   cp ~/.config-backup/<时间戳>/starship.toml ~/.config/starship.toml
-#   cp ~/.config-backup/<时间戳>/ghostty-theme.zsh ~/.config/ghostty/theme.zsh
+#   1. 安装 Homebrew 依赖（Starship + zsh 工具，不装终端模拟器，不装字体）
+#   2. 备份已有 Starship 配置到 ~/.config-backup/YYYYMMDD_HHMMSS/
+#   3. 安装官方 Starship plain-text-symbols 预设，并把 zsh 配置追加/替换到 ~/.zshrc
 #
 # 卸载 zsh 配置:
-#   删除 ~/.zshrc 中 ">>> ghostty-terminal-config >>>" 到 "<<< ghostty-terminal-config <<<" 之间的内容
+#   删除 ~/.zshrc 中 ">>> shell-config >>>" 到 "<<< shell-config <<<" 之间的内容
+#   旧版标记 ">>> ghostty-terminal-config >>>" 也会被本次安装替换掉
 # ==============================================================================
 
 set -e
@@ -30,8 +21,11 @@ set -e
 REPO_URL="https://github.com/AimLuo/ghostty-terminal-config.git"
 BACKUP_DIR="$HOME/.config-backup/$(date +%Y%m%d_%H%M%S)"
 TMP_DIR="$(mktemp -d)"
+BLOCK_BEGIN="# >>> shell-config >>>"
+BLOCK_END="# <<< shell-config <<<"
+OLD_BLOCK_BEGIN="# >>> ghostty-terminal-config >>>"
+OLD_BLOCK_END="# <<< ghostty-terminal-config <<<"
 
-# 清理临时目录
 cleanup() {
   rm -rf "$TMP_DIR"
 }
@@ -42,15 +36,16 @@ trap cleanup EXIT
 # ==============================================================================
 echo ""
 echo "======================================"
-echo " Ghostty Terminal Config 安装脚本"
+echo " shell-config 安装脚本"
 echo "======================================"
 echo ""
 echo "本脚本将执行以下操作:"
-echo "  1. 通过 Homebrew 安装终端工具和字体"
-echo "  2. 备份已有 Ghostty 和 Starship 配置到 ~/.config-backup/"
-echo "  3. 安装新的终端配置（Ghostty + Starship + zsh）"
+echo "  1. 通过 Homebrew 安装 Starship 与 zsh 工具（不装 Ghostty，不装字体）"
+echo "  2. 备份已有 Starship 配置到 ~/.config-backup/"
+echo "  3. 安装 Starship plain-text 预设，并写入 zsh 配置"
 echo ""
-echo "已有配置将备份到: $BACKUP_DIR"
+echo "已有 Starship 配置将备份到: $BACKUP_DIR"
+echo "不会改动任何终端模拟器配置（包括 ~/.config/ghostty）。"
 echo ""
 read -p "是否继续？(y/n) " -n 1 -r < /dev/tty
 echo ""
@@ -58,43 +53,6 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   echo "已取消安装。"
   exit 0
 fi
-echo ""
-
-# ==============================================================================
-# 选择主题
-# ==============================================================================
-THEME_VARIANT="${THEME:-}"
-if [[ -n "$THEME_VARIANT" ]]; then
-  case "$THEME_VARIANT" in
-    light|latte|Latte) THEME_VARIANT="light" ;;
-    dark|mocha|Mocha) THEME_VARIANT="dark" ;;
-    *)
-      echo "错误: THEME 应为 dark 或 light"
-      exit 1
-      ;;
-  esac
-  echo "使用主题: $THEME_VARIANT（来自 THEME 环境变量）"
-else
-  echo "请选择终端主题:"
-  echo "  1) 深色  Catppuccin Mocha（默认，与当前风格一致）"
-  echo "  2) 浅色  Catppuccin Latte（终端浅底；彩虹条仍用 Mocha 粉彩 + 深色字）"
-  echo ""
-  read -p "请输入 [1/2] (默认 1): " -n 1 -r < /dev/tty
-  echo ""
-  echo ""
-  if [[ $REPLY == "2" ]]; then
-    THEME_VARIANT="light"
-  else
-    THEME_VARIANT="dark"
-  fi
-fi
-
-if [[ "$THEME_VARIANT" == "light" ]]; then
-  THEME_LABEL="浅色 · Catppuccin Latte"
-else
-  THEME_LABEL="深色 · Catppuccin Mocha"
-fi
-echo "已选择: $THEME_LABEL"
 echo ""
 
 # ==============================================================================
@@ -114,12 +72,6 @@ fi
 # 安装依赖
 # ==============================================================================
 echo "==> 安装 Homebrew 依赖..."
-brew install --cask font-maple-mono-nf
-if [ ! -d "/Applications/Ghostty.app" ]; then
-  brew install --cask ghostty
-else
-  echo "    Ghostty 已安装，跳过。"
-fi
 brew install starship fzf zoxide eza bat yazi zsh-autosuggestions zsh-syntax-highlighting zsh-completions
 
 # ==============================================================================
@@ -149,8 +101,6 @@ backup_file() {
   fi
 }
 
-backup_file ~/.config/ghostty/config "ghostty-config"
-backup_file ~/.config/ghostty/theme.zsh "ghostty-theme.zsh"
 backup_file ~/.config/starship.toml "starship.toml"
 
 if [ -d "$BACKUP_DIR" ]; then
@@ -158,74 +108,98 @@ if [ -d "$BACKUP_DIR" ]; then
   echo "    ✓ 已有配置已备份到: $BACKUP_DIR"
   echo ""
 else
-  echo "    无已有配置，跳过备份。"
+  echo "    无已有 Starship 配置，跳过备份。"
 fi
 
 # ==============================================================================
 # 安装配置文件
 # ==============================================================================
 echo "==> 安装配置文件..."
-mkdir -p ~/.config/ghostty
-
-cp "$TMP_DIR/repo/ghostty/config" ~/.config/ghostty/config
+mkdir -p ~/.config
 cp "$TMP_DIR/repo/starship/starship.toml" ~/.config/starship.toml
+echo "    ✓ ~/.config/starship.toml  (plain-text-symbols)"
 
-# 按选择写入浅色/深色。彩虹条始终用 Mocha（粉彩底 + 深色字），浅底上也清楚。
-if [[ "$THEME_VARIANT" == "light" ]]; then
-  sed -i '' 's/theme = "Catppuccin Mocha"/theme = "Catppuccin Latte"/' ~/.config/ghostty/config
-  cat > ~/.config/ghostty/theme.zsh <<'EOF'
-# 由 ghostty-terminal-config 安装脚本生成（浅色）
-# bat 使用内置浅色主题，避免深色高亮铺在浅色终端上
-export BAT_THEME="GitHub"
-# Catppuccin Latte overlay0，自动建议比默认灰阶更易辨认
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#9ca0b0"
-EOF
-else
-  cat > ~/.config/ghostty/theme.zsh <<'EOF'
-# 由 ghostty-terminal-config 安装脚本生成（深色）
-# 沿用 bat / autosuggestions 默认配色
-EOF
-fi
+write_zsh_block() {
+  local dest="$1"
+  {
+    echo "$BLOCK_BEGIN"
+    echo "# 由安装脚本追加。删除本段即可卸载 zsh 配置。"
+    cat "$TMP_DIR/repo/zsh/.zshrc"
+    echo "$BLOCK_END"
+  } > "$dest"
+}
 
-echo "    ✓ ~/.config/ghostty/config  ($THEME_LABEL)"
-echo "    ✓ ~/.config/ghostty/theme.zsh"
-echo "    ✓ ~/.config/starship.toml"
+replace_marked_block() {
+  local file="$1"
+  local begin="$2"
+  local end="$3"
+  local newfile="$4"
+  local tmp
+  tmp="$(mktemp)"
+  awk -v begin="$begin" -v end="$end" -v newfile="$newfile" '
+    BEGIN { replacing = 0 }
+    $0 == begin {
+      while ((getline line < newfile) > 0) print line
+      close(newfile)
+      replacing = 1
+      next
+    }
+    replacing && $0 == end { replacing = 0; next }
+    !replacing { print }
+  ' "$file" > "$tmp"
+  mv "$tmp" "$file"
+}
 
-ensure_theme_source() {
-  if grep -q 'ghostty/theme.zsh' ~/.zshrc 2>/dev/null; then
-    return 0
-  fi
-  if grep -q "# <<< ghostty-terminal-config <<<" ~/.zshrc 2>/dev/null; then
+remove_marked_block() {
+  local file="$1"
+  local begin="$2"
+  local end="$3"
+  local tmp
+  tmp="$(mktemp)"
+  awk -v begin="$begin" -v end="$end" '
+    BEGIN { removing = 0 }
+    $0 == begin { removing = 1; next }
+    removing && $0 == end { removing = 0; next }
+    !removing { print }
+  ' "$file" > "$tmp"
+  mv "$tmp" "$file"
+}
+
+strip_ghostty_theme_source() {
+  local file="$1"
+  if grep -q 'ghostty/theme.zsh' "$file" 2>/dev/null; then
     local tmp
     tmp="$(mktemp)"
-    awk '
-      /# <<< ghostty-terminal-config <<</ && !done {
-        print "[ -f \"$HOME/.config/ghostty/theme.zsh\" ] && source \"$HOME/.config/ghostty/theme.zsh\""
-        done=1
-      }
-      { print }
-    ' ~/.zshrc > "$tmp"
-    mv "$tmp" ~/.zshrc
-  else
-    echo '[ -f "$HOME/.config/ghostty/theme.zsh" ] && source "$HOME/.config/ghostty/theme.zsh"' >> ~/.zshrc
+    grep -v 'ghostty/theme.zsh' "$file" > "$tmp"
+    mv "$tmp" "$file"
   fi
 }
 
-# .zshrc 追加到用户已有配置尾部（不覆盖）
-if grep -q "# >>> ghostty-terminal-config >>>" ~/.zshrc 2>/dev/null; then
-  ensure_theme_source
-  echo "    .zshrc 中已存在 ghostty-terminal-config 配置，已同步主题附加项。"
+BLOCK_FILE="$TMP_DIR/zsh-block"
+write_zsh_block "$BLOCK_FILE"
+
+touch ~/.zshrc
+
+if grep -q "$BLOCK_BEGIN" ~/.zshrc; then
+  replace_marked_block ~/.zshrc "$BLOCK_BEGIN" "$BLOCK_END" "$BLOCK_FILE"
+  echo "    ✓ ~/.zshrc（已更新 shell-config 段）"
+elif grep -q "$OLD_BLOCK_BEGIN" ~/.zshrc; then
+  replace_marked_block ~/.zshrc "$OLD_BLOCK_BEGIN" "$OLD_BLOCK_END" "$BLOCK_FILE"
+  echo "    ✓ ~/.zshrc（已将旧 ghostty-terminal-config 段替换为 shell-config）"
 else
   {
     echo ""
-    echo "# >>> ghostty-terminal-config >>>"
-    echo "# 以下内容由 ghostty-terminal-config 安装脚本自动追加"
-    echo "# 删除方法: 移除从 >>> 到 <<< 之间的所有内容"
-    cat "$TMP_DIR/repo/zsh/.zshrc"
-    echo "# <<< ghostty-terminal-config <<<"
+    cat "$BLOCK_FILE"
   } >> ~/.zshrc
-  echo "    ✓ ~/.zshrc (已追加到尾部)"
+  echo "    ✓ ~/.zshrc（已追加 shell-config 段）"
 fi
+
+if grep -q "$OLD_BLOCK_BEGIN" ~/.zshrc; then
+  remove_marked_block ~/.zshrc "$OLD_BLOCK_BEGIN" "$OLD_BLOCK_END"
+  echo "    ✓ ~/.zshrc（已移除残留的旧标记段）"
+fi
+
+strip_ghostty_theme_source ~/.zshrc
 
 # ==============================================================================
 # 完成
@@ -235,18 +209,14 @@ echo "======================================"
 echo " 安装完成！"
 echo "======================================"
 echo ""
-echo "主题: $THEME_LABEL"
-echo "请重启 Ghostty 终端生效。"
-echo ""
-echo "之后若要改主题，重新运行本脚本并重新选择即可。"
+echo "请开一个新的 zsh 会话，或执行: source ~/.zshrc"
+echo "任意终端模拟器都可以，本配置不绑定 Ghostty。"
 echo ""
 if [ -d "$BACKUP_DIR" ]; then
-  echo "恢复旧配置:"
-  echo "  cp $BACKUP_DIR/ghostty-config ~/.config/ghostty/config"
+  echo "恢复旧 Starship 配置:"
   echo "  cp $BACKUP_DIR/starship.toml ~/.config/starship.toml"
-  echo "  cp $BACKUP_DIR/ghostty-theme.zsh ~/.config/ghostty/theme.zsh"
   echo ""
 fi
 echo "卸载 zsh 配置:"
-echo "  删除 ~/.zshrc 中 '>>> ghostty-terminal-config >>>' 到 '<<< ghostty-terminal-config <<<' 之间的所有内容"
+echo "  删除 ~/.zshrc 中 '$BLOCK_BEGIN' 到 '$BLOCK_END' 之间的所有内容"
 echo ""
