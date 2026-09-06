@@ -47,7 +47,7 @@ zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 # Starship | 终端提示符
 # ==============================================================================
 # 跨 shell、不绑定具体终端模拟器
-# 配置文件: ~/.config/starship.toml（本仓库使用官方 plain-text-symbols 预设）
+# 配置文件: ~/.config/starship.toml（钉在 Starship 1.26 的官方 plain-text-symbols 预设）
 # 注意: 放在 compinit 之后，避免补全系统冲突
 eval "$(starship init zsh)"
 

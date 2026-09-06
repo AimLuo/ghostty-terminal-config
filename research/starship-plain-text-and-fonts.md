@@ -57,7 +57,7 @@ CLI 预设名是 `plain-text-symbols`，不是 URL 路径里的 `plain-text`。
 - blob：<https://github.com/starship/starship/blob/main/docs/public/presets/toml/plain-text-symbols.toml>
 - 站点下载：<https://starship.rs/presets/toml/plain-text-symbols.toml>
 
-完整内容以该文件为准，此处不整份转录（会随 Starship 发版增加模块）。本仓库 `starship/starship.toml` 已是该预设的一份拷贝（含 `jj_bookmark`、`Bazzite` 等较新键），与 2026-09-06 拉取的 `main` 分支 TOML 一致。站点渲染页有时比 `main` 少若干 OS/模块键，以仓库 TOML / 已安装的 `starship preset` 为准。
+完整内容以发版 tag 上的该文件为准，此处不整份转录。GitHub `main` 与 starship.rs 文档站点会超前于 Homebrew 发行版（例如 1.26.0 还不认识 `jj_bookmark`）。本仓库 `starship/starship.toml` **钉在 Starship 1.26.0**：由本机 `starship preset plain-text-symbols` 生成，对应 <https://github.com/starship/starship/blob/v1.26.0/docs/public/presets/toml/plain-text-symbols.toml>。安装脚本会提示正在安装的是 1.26 预设。
 
 TOML 形态（抽样，证明是 ASCII 词/标点，不是 Nerd Font 字形）：
 
@@ -279,7 +279,7 @@ Yazi 默认 `[icon]` 同理。
    <https://yazi-rs.github.io/docs/installation>
 5. 继续 `brew install --cask font-maple-mono-nf` 会多一次与提示符无关的 cask、多一个本仓库不再引用的字体名，却仍无法保证图标显示。
 
-重构后现状：`starship/starship.toml` 是 official plain-text；`install.sh` 不装字体、不写终端配置；`zsh/.zshrc` 的 eza 别名已去掉 `--icons`。Yazi 仍用它自己的默认图标，不在本仓库安装范围内。
+重构后现状：`starship/starship.toml` 是钉在 Starship 1.26.0 的 official plain-text；`install.sh` 不装字体、不写终端配置；`zsh/.zshrc` 的 eza 别名已去掉 `--icons`。Yazi 仍用它自己的默认图标，不在本仓库安装范围内。
 
 ---
 
@@ -289,7 +289,7 @@ Yazi 默认 `[icon]` 同理。
 |------|-----|
 | Plain Text 文档页 | https://starship.rs/presets/plain-text |
 | Plain Text 文档源 | https://github.com/starship/starship/blob/main/docs/presets/plain-text.md |
-| Plain Text 完整 TOML | https://github.com/starship/starship/blob/main/docs/public/presets/toml/plain-text-symbols.toml |
+| Plain Text 完整 TOML（1.26.0） | https://github.com/starship/starship/blob/v1.26.0/docs/public/presets/toml/plain-text-symbols.toml |
 | 预设索引 | https://github.com/starship/starship/blob/main/docs/presets/README.md |
 | Nerd Font 预设（对照） | https://starship.rs/presets/nerd-font/ |
 | No Nerd Fonts 预设（对照） | https://starship.rs/presets/no-nerd-font/ |

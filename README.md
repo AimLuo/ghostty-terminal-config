@@ -2,7 +2,7 @@
 
 macOS 下的 zsh + Starship 配置。不绑定 Ghostty 或任何终端模拟器。
 
-Starship 使用官方 [Plain Text Symbols](https://starship.rs/presets/plain-text) 预设，提示符是纯文本符号，不需要 Nerd Font。
+Starship 使用官方 [Plain Text Symbols](https://starship.rs/presets/plain-text) 预设，内容钉在 **Starship 1.26.0**（由该版本的 `starship preset plain-text-symbols` 生成）。提示符是纯文本符号，不需要 Nerd Font。不要从 GitHub `main` 或 starship.rs 当前文档页拷 TOML，那些会带上尚未发版的模块（例如 `jj_bookmark`）。
 
 ## 效果
 
@@ -14,7 +14,7 @@ Starship 使用官方 [Plain Text Symbols](https://starship.rs/presets/plain-tex
 
 | 文件 | 说明 | 安装位置 |
 |------|------|---------|
-| `starship/starship.toml` | 官方 plain-text-symbols 预设 | `~/.config/starship.toml` |
+| `starship/starship.toml` | Starship 1.26.0 的官方 plain-text-symbols 预设 | `~/.config/starship.toml` |
 | `zsh/.zshrc` | zsh 配置（插件、工具、别名、快捷键） | `~/.zshrc` |
 
 ## 一键安装
@@ -27,7 +27,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-conf
 
 1. 通过 Homebrew 安装 Starship 与 zsh 工具（不装终端模拟器，不装字体）
 2. 备份已有 Starship 配置
-3. 覆盖写入 `~/.config/starship.toml`
+3. 覆盖写入 `~/.config/starship.toml`（明确提示：这是 Starship **1.26.0** 预设）
 4. 将 zsh 配置写入 `~/.zshrc`（已有旧 `ghostty-terminal-config` 段会被替换）
 
 不会改动 `~/.config/ghostty` 或其他终端配置。
@@ -83,7 +83,7 @@ cp /tmp/shell-config/starship/starship.toml ~/.config/starship.toml
 cat /tmp/shell-config/zsh/.zshrc >> ~/.zshrc
 ```
 
-或直接套用官方预设：
+不要用 GitHub `main` 上的 TOML。若本机 Starship 已是 1.26.x，也可以用该版本自己生成：
 
 ```bash
 starship preset plain-text-symbols -o ~/.config/starship.toml
