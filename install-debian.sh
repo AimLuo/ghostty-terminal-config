@@ -4,14 +4,15 @@
 # shell-config Debian 安装脚本（面向 Debian 13 Trixie）
 # ==============================================================================
 # 用法:
-#   bash <(curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main/install-debian.sh)
+#   curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main/install-debian.sh | bash
 #
 # 前提: 已安装 git 和 zsh。
 #
 # 说明:
 #   1. Debian 主仓安装 eza 与 zsh 插件；bat / zoxide / fzf / yazi 下官方 GitHub .deb
 #   2. Starship 无官方 .deb，用官方 install.sh 钉在 1.26.0
-#   3. 写入 Starship 1.26 预设，以及 Debian 专用 zsh/debian.zshrc
+#   3. 写入 Starship 1.26 预设，并将 zshenv/、zshrc/ 安装到 ~/.config/shell-config/
+#   4. 在 ~/.zshenv 和 ~/.zshrc 写入 shell-config 段（不设置 ZDOTDIR）
 #   不加第三方 apt 源，不装字体，不改终端模拟器配置
 # ==============================================================================
 
@@ -19,6 +20,9 @@ set -euo pipefail
 
 REPO_URL="https://github.com/AimLuo/ghostty-terminal-config.git"
 STARSHIP_PRESET_VERSION="1.26.0"
+SHELL_CONFIG_DIR="$HOME/.config/shell-config"
+SHELL_CONFIG_ZSHENV="$SHELL_CONFIG_DIR/zshenv"
+SHELL_CONFIG_ZSHRC="$SHELL_CONFIG_DIR/zshrc"
 BACKUP_DIR="$HOME/.config-backup/$(date +%Y%m%d_%H%M%S)"
 TMP_DIR="$(mktemp -d)"
 BLOCK_BEGIN="# >>> shell-config >>>"
@@ -198,7 +202,7 @@ SRC=""
 SCRIPT_PATH="${BASH_SOURCE[0]:-}"
 if [[ -n "$SCRIPT_PATH" && -f "$SCRIPT_PATH" ]]; then
   _dir="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
-  if [[ -f "$_dir/starship/starship.toml" && -f "$_dir/zsh/debian.zshrc" ]]; then
+  if [[ -f "$_dir/starship/starship.toml" && -f "$_dir/zshenv/env.zsh" && -f "$_dir/zshrc/main.zsh" ]]; then
     SRC="$_dir"
     echo "==> 使用本地仓库: $SRC"
   fi
@@ -244,16 +248,32 @@ fi
 # 安装配置文件
 # ==============================================================================
 echo "==> 安装配置文件..."
-mkdir -p ~/.config
-cp "$SRC/starship/starship.toml" ~/.config/starship.toml
-echo "    ✓ ~/.config/starship.toml  (Starship ${STARSHIP_PRESET_VERSION} plain-text-symbols)"
+mkdir -p "$SHELL_CONFIG_ZSHENV" "$SHELL_CONFIG_ZSHRC" ~/.local/state/zsh ~/.cache/zsh
+rm -rf "$SHELL_CONFIG_DIR/zsh"
 
-write_zsh_block() {
+cp "$SRC/zshenv/"*.zsh "$SHELL_CONFIG_ZSHENV/"
+cp "$SRC/zshrc/"*.zsh "$SHELL_CONFIG_ZSHRC/"
+cp "$SRC/starship/starship.toml" ~/.config/starship.toml
+echo "    ✓ $SHELL_CONFIG_ZSHENV"
+echo "    ✓ $SHELL_CONFIG_ZSHRC"
+echo "    ✓ ~/.config/starship.toml"
+
+write_zshenv_block() {
   local dest="$1"
   {
     echo "$BLOCK_BEGIN"
-    echo "# 由 Debian 安装脚本追加。删除本段即可卸载 zsh 配置。"
-    cat "$SRC/zsh/debian.zshrc"
+    echo "# 由 Debian 安装脚本写入。删除本段并移除 ~/.config/shell-config 即可卸载。"
+    echo '[[ -f "$HOME/.config/shell-config/zshenv/env.zsh" ]] && source "$HOME/.config/shell-config/zshenv/env.zsh"'
+    echo "$BLOCK_END"
+  } > "$dest"
+}
+
+write_zshrc_block() {
+  local dest="$1"
+  {
+    echo "$BLOCK_BEGIN"
+    echo "# 由 Debian 安装脚本写入。删除本段并移除 ~/.config/shell-config 即可卸载。"
+    echo '[[ -f "$HOME/.config/shell-config/zshrc/main.zsh" ]] && source "$HOME/.config/shell-config/zshrc/main.zsh"'
     echo "$BLOCK_END"
   } > "$dest"
 }
@@ -265,7 +285,7 @@ replace_marked_block() {
   local newfile="$4"
   local tmp
   tmp="$(mktemp)"
-  awk -v begin="$begin" -v end="$end" -v newfile="$newfile" '
+  if ! awk -v begin="$begin" -v end="$end" -v newfile="$newfile" '
     BEGIN { replacing = 0 }
     $0 == begin {
       while ((getline line < newfile) > 0) print line
@@ -275,7 +295,12 @@ replace_marked_block() {
     }
     replacing && $0 == end { replacing = 0; next }
     !replacing { print }
-  ' "$file" > "$tmp"
+    END { if (replacing) exit 1 }
+  ' "$file" > "$tmp"; then
+    echo "错误: $file 有 '${begin}' 但缺少 '${end}'，未改写该文件" >&2
+    rm -f "$tmp"
+    return 1
+  fi
   mv "$tmp" "$file"
 }
 
@@ -285,38 +310,47 @@ remove_marked_block() {
   local end="$3"
   local tmp
   tmp="$(mktemp)"
-  awk -v begin="$begin" -v end="$end" '
+  if ! awk -v begin="$begin" -v end="$end" '
     BEGIN { removing = 0 }
     $0 == begin { removing = 1; next }
     removing && $0 == end { removing = 0; next }
     !removing { print }
-  ' "$file" > "$tmp"
+    END { if (removing) exit 1 }
+  ' "$file" > "$tmp"; then
+    echo "错误: $file 有 '${begin}' 但缺少 '${end}'，未改写该文件" >&2
+    rm -f "$tmp"
+    return 1
+  fi
   mv "$tmp" "$file"
 }
 
-BLOCK_FILE="$TMP_DIR/zsh-block"
-write_zsh_block "$BLOCK_FILE"
+apply_marked_block() {
+  local file="$1"
+  local block="$2"
+  touch "$file"
+  if grep -q "$BLOCK_BEGIN" "$file"; then
+    replace_marked_block "$file" "$BLOCK_BEGIN" "$BLOCK_END" "$block"
+    echo "    ✓ $file（已更新 shell-config 段）"
+  else
+    {
+      echo ""
+      cat "$block"
+    } >> "$file"
+    echo "    ✓ $file（已追加 shell-config 段）"
+  fi
+  if grep -q "$OLD_BLOCK_BEGIN" "$file"; then
+    remove_marked_block "$file" "$OLD_BLOCK_BEGIN" "$OLD_BLOCK_END"
+    echo "    ✓ $file（已移除 ghostty-terminal-config 旧段）"
+  fi
+}
 
-touch ~/.zshrc
+ZSHENV_BLOCK="$TMP_DIR/zshenv-block"
+ZSHRC_BLOCK="$TMP_DIR/zshrc-block"
+write_zshenv_block "$ZSHENV_BLOCK"
+write_zshrc_block "$ZSHRC_BLOCK"
 
-if grep -q "$BLOCK_BEGIN" ~/.zshrc; then
-  replace_marked_block ~/.zshrc "$BLOCK_BEGIN" "$BLOCK_END" "$BLOCK_FILE"
-  echo "    ✓ ~/.zshrc（已更新 shell-config 段，Debian 配置）"
-elif grep -q "$OLD_BLOCK_BEGIN" ~/.zshrc; then
-  replace_marked_block ~/.zshrc "$OLD_BLOCK_BEGIN" "$OLD_BLOCK_END" "$BLOCK_FILE"
-  echo "    ✓ ~/.zshrc（已将旧 ghostty-terminal-config 段替换为 Debian shell-config）"
-else
-  {
-    echo ""
-    cat "$BLOCK_FILE"
-  } >> ~/.zshrc
-  echo "    ✓ ~/.zshrc（已追加 Debian shell-config 段）"
-fi
-
-if grep -q "$OLD_BLOCK_BEGIN" ~/.zshrc; then
-  remove_marked_block ~/.zshrc "$OLD_BLOCK_BEGIN" "$OLD_BLOCK_END"
-  echo "    ✓ ~/.zshrc（已移除残留的旧标记段）"
-fi
+apply_marked_block ~/.zshenv "$ZSHENV_BLOCK"
+apply_marked_block ~/.zshrc "$ZSHRC_BLOCK"
 
 # ==============================================================================
 # 完成
@@ -326,10 +360,9 @@ echo "======================================"
 echo " 安装完成！"
 echo "======================================"
 echo ""
-echo "请开一个新的 zsh 会话，或执行: source ~/.zshrc"
+echo "请开一个新的 zsh 会话（环境变量在 ~/.zshenv，source ~/.zshrc 不会重载它们）。"
 echo "若当前登录 shell 还不是 zsh: chsh -s /usr/bin/zsh"
 echo "Starship 配置为 ${STARSHIP_PRESET_VERSION} 的 plain-text-symbols 预设。"
-echo "zsh 配置来自 zsh/debian.zshrc，不是 macOS 那份。"
 echo ""
 if [ -d "$BACKUP_DIR" ]; then
   echo "恢复旧 Starship 配置:"
@@ -337,5 +370,6 @@ if [ -d "$BACKUP_DIR" ]; then
   echo ""
 fi
 echo "卸载 zsh 配置:"
-echo "  删除 ~/.zshrc 中 '$BLOCK_BEGIN' 到 '$BLOCK_END' 之间的所有内容"
+echo "  删除 ~/.zshenv 和 ~/.zshrc 中 '$BLOCK_BEGIN' 到 '$BLOCK_END' 之间的内容"
+echo "  rm -rf ~/.config/shell-config"
 echo ""
