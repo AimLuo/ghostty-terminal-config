@@ -7,20 +7,17 @@
 #   curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main/install-macos.sh | bash
 #
 # 说明:
-#   1. 安装 Homebrew 依赖（Starship + zsh 工具，不装终端模拟器，不装字体）
+#   1. 安装 Homebrew 依赖（Starship + zsh 工具）
 #   2. 备份已有 Starship 配置到 ~/.config-backup/YYYYMMDD_HHMMSS/
-#   3. 安装 Starship 1.26 预设与 zshenv/、zshrc/ 到 ~/.config/shell-config/
-#   4. 在 ~/.zshenv 和 ~/.zshrc 写入 shell-config 段（不设置 ZDOTDIR）
-#
-# 卸载 zsh 配置:
-#   删除 ~/.zshenv 和 ~/.zshrc 中 ">>> shell-config >>>" 到 "<<< shell-config <<<" 之间的内容
-#   并删除 ~/.config/shell-config
+#   3. 按已安装 Starship 版本从 GitHub 对应 tag 拉取 plain-text-symbols 预设
+#   4. 安装 zshenv/、zshrc/ 到 ~/.config/shell-config/
+#   5. 在 ~/.zshenv 和 ~/.zshrc 写入 shell-config 段
 # ==============================================================================
 
 set -e
 
 REPO_URL="https://github.com/AimLuo/ghostty-terminal-config.git"
-STARSHIP_PRESET_VERSION="1.26.0"
+STARSHIP_PRESET_NAME="plain-text-symbols"
 SHELL_CONFIG_DIR="$HOME/.config/shell-config"
 SHELL_CONFIG_ZSHENV="$SHELL_CONFIG_DIR/zshenv"
 SHELL_CONFIG_ZSHRC="$SHELL_CONFIG_DIR/zshrc"
@@ -36,6 +33,49 @@ cleanup() {
 }
 trap cleanup EXIT
 
+fetch_starship_preset() {
+  local ver="$1"
+  local dest="$2"
+  local tag="v${ver#v}"
+  local tmp="$TMP_DIR/${STARSHIP_PRESET_NAME}.toml"
+  local paths=(
+    "docs/public/presets/toml/${STARSHIP_PRESET_NAME}.toml"
+    "docs/.vuepress/public/presets/toml/${STARSHIP_PRESET_NAME}.toml"
+  )
+  local path url fetched=""
+
+  if [[ -z "$ver" ]]; then
+    echo "错误: 无法确定 Starship 版本，不能下载预设" >&2
+    return 1
+  fi
+
+  mkdir -p "$(dirname "$dest")"
+  for path in "${paths[@]}"; do
+    url="https://raw.githubusercontent.com/starship/starship/${tag}/${path}"
+    echo "    下载 ${url}"
+    if curl -fsSL --retry 3 --retry-delay 1 -A "shell-config" -o "$tmp" "$url" \
+      && [[ -s "$tmp" ]] \
+      && grep -q 'success_symbol' "$tmp"; then
+      fetched="$url"
+      break
+    fi
+    rm -f "$tmp"
+  done
+
+  if [[ -z "$fetched" ]]; then
+    echo "错误: GitHub tag ${tag} 没有 ${STARSHIP_PRESET_NAME} 预设" >&2
+    return 1
+  fi
+
+  {
+    echo "# Official Starship preset: ${STARSHIP_PRESET_NAME}"
+    echo "# Source: ${fetched}"
+    echo "# Installed Starship: ${ver}"
+    echo ""
+    cat "$tmp"
+  } > "$dest"
+}
+
 # ==============================================================================
 # 用户确认
 # ==============================================================================
@@ -45,15 +85,13 @@ echo " shell-config 安装脚本"
 echo "======================================"
 echo ""
 echo "本脚本将执行以下操作:"
-echo "  1. 通过 Homebrew 安装 Starship 与 zsh 工具（不装 Ghostty，不装字体）"
+echo "  1. 通过 Homebrew 安装 Starship 与 zsh 工具"
 echo "  2. 备份已有 Starship 配置到 ~/.config-backup/"
-echo "  3. 安装 Starship ${STARSHIP_PRESET_VERSION} 预设与 $SHELL_CONFIG_ZSHENV、$SHELL_CONFIG_ZSHRC"
-echo "  4. 在 ~/.zshenv 和 ~/.zshrc 写入 shell-config 段"
+echo "  3. 按已安装 Starship 版本，从 GitHub 对应 tag 拉取 ${STARSHIP_PRESET_NAME} 预设"
+echo "  4. 安装 $SHELL_CONFIG_ZSHENV、$SHELL_CONFIG_ZSHRC"
+echo "  5. 在 ~/.zshenv 和 ~/.zshrc 写入 shell-config 段"
 echo ""
-echo "Starship 配置钉在 ${STARSHIP_PRESET_VERSION}（来自该版本的 starship preset），"
-echo "不会使用 GitHub main 或 starship.rs 上尚未发版的文档。"
 echo "已有 Starship 配置将备份到: $BACKUP_DIR"
-echo "不会改动任何终端模拟器配置（包括 ~/.config/ghostty）。"
 echo ""
 read -p "是否继续？(y/n) " -n 1 -r < /dev/tty
 echo ""
@@ -83,11 +121,12 @@ echo "==> 安装 Homebrew 依赖..."
 brew install starship fzf zoxide eza bat yazi zsh-autosuggestions zsh-syntax-highlighting zsh-completions
 
 STARSHIP_VER="$(starship --version 2>/dev/null | awk 'NR==1 {print $2}')"
-echo "    已安装 Starship ${STARSHIP_VER:-unknown}"
-echo "    即将写入的配置是 Starship ${STARSHIP_PRESET_VERSION} 的 plain-text-symbols 预设"
-if [[ -n "$STARSHIP_VER" && "$STARSHIP_VER" != "$STARSHIP_PRESET_VERSION" && "$STARSHIP_VER" != ${STARSHIP_PRESET_VERSION%.*}.* ]]; then
-  echo "    注意: 当前 Starship 是 ${STARSHIP_VER}，与仓库钉住的 ${STARSHIP_PRESET_VERSION} 不一致"
+STARSHIP_VER="${STARSHIP_VER#v}"
+if [[ -z "$STARSHIP_VER" ]]; then
+  echo "错误: 无法读取 starship --version，不能按版本拉取预设"
+  exit 1
 fi
+echo "    已安装 Starship ${STARSHIP_VER}"
 
 # ==============================================================================
 # 定位配置文件（本地仓库优先，否则 clone GitHub）
@@ -96,7 +135,7 @@ SRC=""
 SCRIPT_PATH="${BASH_SOURCE[0]:-}"
 if [[ -n "$SCRIPT_PATH" && -f "$SCRIPT_PATH" ]]; then
   _dir="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
-  if [[ -f "$_dir/starship/starship.toml" && -f "$_dir/zshenv/env.zsh" && -f "$_dir/zshrc/main.zsh" ]]; then
+  if [[ -f "$_dir/zshenv/env.zsh" && -f "$_dir/zshrc/main.zsh" ]]; then
     SRC="$_dir"
     echo "==> 使用本地仓库: $SRC"
   fi
@@ -147,10 +186,10 @@ rm -rf "$SHELL_CONFIG_DIR/zsh"
 
 cp "$SRC/zshenv/"*.zsh "$SHELL_CONFIG_ZSHENV/"
 cp "$SRC/zshrc/"*.zsh "$SHELL_CONFIG_ZSHRC/"
-cp "$SRC/starship/starship.toml" ~/.config/starship.toml
+fetch_starship_preset "$STARSHIP_VER" ~/.config/starship.toml
 echo "    ✓ $SHELL_CONFIG_ZSHENV"
 echo "    ✓ $SHELL_CONFIG_ZSHRC"
-echo "    ✓ ~/.config/starship.toml  (Starship ${STARSHIP_PRESET_VERSION} plain-text-symbols)"
+echo "    ✓ ~/.config/starship.toml  (Starship ${STARSHIP_VER} ${STARSHIP_PRESET_NAME})"
 
 write_zshenv_block() {
   local dest="$1"
@@ -255,8 +294,6 @@ echo " 安装完成！"
 echo "======================================"
 echo ""
 echo "请开一个新的 zsh 会话（环境变量在 ~/.zshenv，source ~/.zshrc 不会重载它们）。"
-echo "任意终端模拟器都可以，本配置不绑定 Ghostty。"
-echo "Starship 配置为 ${STARSHIP_PRESET_VERSION} 的 plain-text-symbols 预设。"
 echo ""
 if [ -d "$BACKUP_DIR" ]; then
   echo "恢复旧 Starship 配置:"

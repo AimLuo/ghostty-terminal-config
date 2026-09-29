@@ -1,8 +1,8 @@
 # shell-config
 
-zsh + Starship 配置。不绑定 Ghostty 或任何终端模拟器，提示符用纯文本符号，不需要 Nerd Font。
+zsh + Starship 配置。提示符用纯文本符号，不需要 Nerd Font。
 
-Starship 使用官方 [Plain Text Symbols](https://starship.rs/presets/plain-text) 预设，钉在 **1.26.0**。
+Starship 使用官方 [Plain Text Symbols](https://starship.rs/presets/plain-text) 预设，安装时按已装版本从 [starship/starship](https://github.com/starship/starship) 对应 tag 拉取。Debian 会先查 GitHub latest release 再安装该版本。
 
 ## 安装
 
@@ -40,8 +40,8 @@ curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main
 |------|------|
 | `~/.config/shell-config/zshenv/` | 环境变量、PATH |
 | `~/.config/shell-config/zshrc/` | 交互配置（历史、补全、插件、别名、Starship） |
-| `~/.config/starship.toml` | Starship 预设（与仓库内同一份） |
-| `~/.zshenv` / `~/.zshrc` | 只追加 `# >>> shell-config >>>` 段，分别 source 上面两个目录 |
+| `~/.config/starship.toml` | 安装时按已装 Starship 版本从 GitHub tag 拉取的预设 |
+| `~/.zshenv` / `~/.zshrc` | 追加 `# >>> shell-config >>>` 段，分别 source 上面两个目录 |
 
 ## 仓库结构
 
@@ -49,14 +49,18 @@ curl -fsSL https://raw.githubusercontent.com/AimLuo/ghostty-terminal-config/main
 zshenv/               环境变量（安装后落到 ~/.config/shell-config/zshenv）
   env.zsh
 zshrc/                交互配置（安装后落到 ~/.config/shell-config/zshrc）
-  main.zsh            历史、zoxide，并依次 source 其余模块
-  completion.zsh      Tab 补全
-  fzf.zsh             Ctrl+R / Ctrl+T
-  yazi.zsh            y：退出后 cd 到浏览目录
-  aliases.zsh         ls / cat / 常用短别名
-  plugins.zsh         autosuggestions、syntax-highlighting
-  prompt.zsh          启动 Starship
-starship/starship.toml
+  main.zsh            按顺序 source 其余模块
+  history.zsh         zsh 历史（不是 brew 包）
+  zsh-completions.zsh
+  fzf.zsh
+  zoxide.zsh
+  yazi.zsh
+  eza.zsh
+  bat.zsh
+  aliases.zsh         常用短别名
+  zsh-autosuggestions.zsh
+  starship.zsh
+  zsh-syntax-highlighting.zsh  须最后加载
 install-macos.sh
 install-debian.sh
 ```

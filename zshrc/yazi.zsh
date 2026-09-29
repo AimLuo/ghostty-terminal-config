@@ -1,5 +1,3 @@
-# Yazi | 终端文件管理器（y：退出后 cd 到浏览目录）
-
 function y() {
   local tmp cwd
   if [[ "$(uname -s)" == "Darwin" ]]; then
